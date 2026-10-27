@@ -1,0 +1,67 @@
+image: python:3.11-slim
+
+stages:
+  - verify
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key:
+    files:
+      - requirements.txt
+  paths:
+    - .cache/pip/
+
+paper-safety-and-regression:
+  stage: verify
+  timeout: 30m
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+  script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt pytest pyyaml httpx
+    - python -m compileall -q .
+    - python -m unittest -v test_btc_trade_economics.py test_btc_exit_policy.py
+    - python -m unittest -v test_paper_worker.py
+    - python -m unittest -v test_trend_stop.py
+    - python -m unittest -v test_hybrid_take_profit.py
+    - python -m unittest -v test_paper_bot_fixes.py
+    - python -m unittest -v test_signal_fusion_trend_gate.py
+    - python -m pytest -q test_market_context.py
+    - python -m unittest -v test_btc_trend_monitor.py
+    - python -m unittest -v test_trend_monitor_worker.py
+    - python -m unittest -v test_signal_engine.py
+    - python -m unittest -v test_kalshi_api.py
+    - python -m unittest -v test_orderbook_quote_pricing.py
+    - python -m unittest -v test_entry_quality.py
+    - python -m unittest -v test_current_signal.py
+    - python -m unittest -v test_current_window_wait.py
+    - python -m unittest -v test_wait_alerts.py
+    - python -m unittest -v test_market_data_diagnostics.py
+    - python -m unittest -v test_performance_audit.py
+    - python -m pytest -q test_decision_audit.py
+    - python -m pytest -q test_performance_analytics.py
+    - python -m pytest -q test_trade_learning.py
+    - python -m pytest -q test_analytics_api.py
+    - python -m pytest -q test_counterfactual_audit.py
+    - python -m pytest -q test_payload_safety.py
+    - python -m pytest -q test_webhook_idempotency.py
+    - python -m pytest -q test_category_registry.py
+    - python -m pytest -q test_manual_api_security.py
+    - python -m pytest -q test_app_http_surface.py
+    - python -m pytest -q test_dashboard_context.py
+    - python -m pytest -q test_trading_mode.py test_phase456_http.py
+    - python -m pytest -q test_market_router.py
+    - python -m pytest -q test_market_decision_engine.py test_market_analysis_provider.py test_market_decision_pipeline.py
+    - python -m pytest -q test_multi_user_security.py
+    - python -m pytest -q test_kalshi_credentials.py
+    - python -m pytest -q test_phase456_dashboard.py
+    - python -m pytest -q test_market_catalog_diagnostics.py
+    - python -m pytest -q test_market_catalog_status.py
+    - python -m pytest -q test_market_analysis_provider_service.py
+    - python validate_dashboard_js.py
+    - python stress_phase456_readiness.py
+    - python stress_market_decision_engine.py
+    - python smoke_shared_alert_flow.py
